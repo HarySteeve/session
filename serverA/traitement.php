@@ -1,16 +1,11 @@
 <?php
-// require_once __DIR__."/MySessionHandler.php";
+require_once __DIR__ . '/init.php';
 
-// $pdo = new PDO("mysql:host=127.0.0.1;dbname=session;charset=utf8", "root", "");
+$couleur = $_POST['couleur'] ?? null;
+if ($couleur !== null) {
+	$_SESSION['couleur'] = $couleur;
+}
 
-// $handler = new MySessionHandler($pdo);
-// session_set_save_handler($handler, true); 
-
-session_start();
-
-$couleur = $_POST["couleur"];
-$_SESSION["couleur"] = $couleur;
-
-header("location: index.php");
+header('location: index.php');
 exit();
 ?>

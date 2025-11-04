@@ -1,0 +1,33 @@
+<?php
+require_once __DIR__ . '/MySessionHandler.php';
+
+function getConnection(): \PDO
+{
+    $dbHost = getenv('DB_HOST') ?: '127.0.0.1';
+    $dbUser = getenv('DB_USER') ?: 'root';
+    $dbPass = getenv('DB_PASSWORD') ?: 'root';
+    $dbName = getenv('DB_NAME') ?: 'session_db';
+
+    $dsn = "mysql:host={$dbHost};dbname={$dbName};charset=utf8";
+    try {
+        return new \PDO($dsn, $dbUser, $dbPass, [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]);
+    } catch (\PDOException $e) {
+        throw new \RuntimeException('Database connection failed: ' . $e->getMessage(), 0, $e);
+    }
+}
+
+try {
+    $pdo = getConnection();
+} catch (Throwable $e) {
+    error_log($e->getMessage());
+    http_response_code(500);
+    echo 'Database connection error';
+    exit;
+}
+
+$handler = new MySessionHandler($pdo);
+session_set_save_handler($handler, true);
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
