@@ -9,7 +9,7 @@ require_once __DIR__ . '/../backend/init.php';
     <title>Document</title>
 </head>
 <body>
-    <h3>Server A</h3>
+    <h3>Server A: <?= htmlspecialchars(gethostname()) ?></h3>
     <form action="../backend/traitement.php" method="post">
         <p>
             Votre couleur prefere: <input type="text" placeholder="bleu" name="couleur">

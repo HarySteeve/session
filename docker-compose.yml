@@ -22,6 +22,8 @@ services:
       - "8001:8000"
     depends_on:
       - mysql
+    volumes:
+    - ./serverA:/var/www/html
     environment:
       - DB_HOST=mysql
       - DB_USER=user
@@ -36,6 +38,8 @@ services:
       - "8002:8000"
     depends_on:
       - mysql
+    volumes:
+      - ./serverA:/var/www/html
     environment:
       - DB_HOST=mysql
       - DB_USER=user
