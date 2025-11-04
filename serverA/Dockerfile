@@ -8,7 +8,7 @@ WORKDIR /var/www/html
 COPY . /var/www/html
 
 # Installe l’extension MySQLi
-RUN docker-php-ext-install mysqli
+RUN docker-php-ext-install mysqli pdo_mysql
 
 # Expose le port 8000
 EXPOSE 8000
