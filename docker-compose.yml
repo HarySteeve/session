@@ -1,0 +1,58 @@
+services:
+  # --- Base de données MySQL ---
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: session_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpass
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  # --- Serveur web A (instance 1) ---
+  server_1:
+    build: ./serverA
+    container_name: server_1
+    ports:
+      - "8001:8000"
+    depends_on:
+      - mysql
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=user
+      - DB_PASSWORD=userpass
+      - DB_NAME=session_db
+
+  # --- Serveur web A (instance 2) ---
+  server_2:
+    build: ./serverA
+    container_name: server_2
+    ports:
+      - "8002:8000"
+    depends_on:
+      - mysql
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=user
+      - DB_PASSWORD=userpass
+      - DB_NAME=session_db
+
+  # --- HAProxy ---
+  haproxy:
+    image: haproxy:latest
+    container_name: haproxy
+    ports:
+      - "8080:8080"
+    depends_on:
+      - server_1
+      - server_2
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+
+volumes:
+  mysql_data:
