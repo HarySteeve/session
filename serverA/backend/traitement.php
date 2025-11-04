@@ -3,9 +3,8 @@ require_once __DIR__ . '/init.php';
 
 $couleur = $_POST['couleur'] ?? null;
 if ($couleur !== null) {
-	$_SESSION['couleur'] = $couleur;
+    $_SESSION['couleur'] = $couleur;
 }
 
-header('location: index.php');
+header('Location: ../pages/index.php');
 exit();
-?>

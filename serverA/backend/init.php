@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/MySessionHandler.php';
 
 function getConnection(): \PDO
 {
@@ -15,6 +14,8 @@ function getConnection(): \PDO
         throw new \RuntimeException('Database connection failed: ' . $e->getMessage(), 0, $e);
     }
 }
+
+require_once __DIR__ . '/MySessionHandler.php';
 
 try {
     $pdo = getConnection();
