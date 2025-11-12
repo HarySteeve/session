@@ -2,12 +2,11 @@
 
 function getConnection(): \PDO
 {
-    $dbHost = getenv('DB_HOST') ?: '127.0.0.1';
     $dbUser = getenv('DB_USER') ?: 'root';
     $dbPass = getenv('DB_PASSWORD') ?: 'root';
     $dbName = getenv('DB_NAME') ?: 'session_db';
 
-    $dsn = "mysql:host={$dbHost};dbname={$dbName};charset=utf8";
+    $dsn = "mysql:host=haproxy;dbname={$dbName};charset=utf8";
     try {
         return new \PDO($dsn, $dbUser, $dbPass, [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]);
     } catch (\PDOException $e) {
@@ -22,7 +21,7 @@ try {
 } catch (Throwable $e) {
     error_log($e->getMessage());
     http_response_code(500);
-    echo 'Database connection error';
+    echo 'Database connection error: ' . $e->getMessage();
     exit;
 }
 
