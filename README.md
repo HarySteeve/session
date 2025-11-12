@@ -7,12 +7,18 @@ chmod +x run.sh
 # Master to master config
 1. Start fresh
 ```bash
-    docker compose down -v
-    docker compose build # CAn be omitted if starting everything for the first time
-    docker compose up -d
+docker compose down -v
+docker compose build # CAn be omitted if starting everything for the first time
+docker compose up -d
+```
+2. a Create heath-check user for HAProxy
+```sql
+CREATE USER IF NOT EXISTS 'haproxy_check'@'%' IDENTIFIED WITH mysql_native_password BY 'checkpass';
+GRANT USAGE ON *.* TO 'haproxy_check'@'%';
+FLUSH PRIVILEGES;
 ```
 
-2. Create the replication user on both servers and configure replication
+3. Create the replication user on both servers and configure replication
 ```sql
 -- mysql1
 CREATE USER IF NOT EXISTS 'repl'@'%' IDENTIFIED WITH mysql_native_password BY 'replpass';
@@ -54,4 +60,4 @@ docker exec -i mysql_db_2 mysql -h127.0.0.1 -P3306 -uroot -proot -e "SHOW SLAVE 
 # look for Slave_IO_Running: Yes and Slave_SQL_Running: Yes and Last_SQL_Errno: 0
 ```
 
-If you prefer to do the steps manually, follow the SQL in step 2 but make sure the application schema/user is created only once (on the seed node) before you CHANGE MASTER on the other node.
+If you prefer to do the steps manually, follow the SQL in step 3 but make sure the application schema/user is created only once (on the seed node) before you CHANGE MASTER on the other node.

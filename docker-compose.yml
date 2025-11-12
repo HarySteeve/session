@@ -64,6 +64,7 @@ services:
     container_name: haproxy
     ports:
       - "8080:8080"
+      - "33066:3306"
     depends_on:
       - server_1
       - server_2
