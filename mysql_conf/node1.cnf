@@ -1,0 +1,12 @@
+[mysqld]
+server_id = 101
+log_bin = mysql-bin
+binlog_format = ROW
+gtid_mode = ON
+enforce_gtid_consistency = ON
+log_slave_updates = ON
+master_info_repository = TABLE
+relay_log_info_repository = TABLE
+sync_binlog = 1
+auto_increment_increment = 2
+auto_increment_offset = 1

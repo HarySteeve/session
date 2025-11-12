@@ -24,6 +24,11 @@ class MySessionHandler implements SessionHandlerInterface {
     }
 
     public function write(string $sessionId, string $data): bool {
+        $emptyForms = ['', 'a:0:{}', 'N;', 'b:0;'];
+        if (in_array($data, $emptyForms, true)) {
+            return true;
+        }
+
         $stmt = $this->pdo->prepare(
             'INSERT INTO sessions (id, data) VALUES (:sessionId, :data)'
             . ' ON DUPLICATE KEY UPDATE data = :data, last_access = NOW()'

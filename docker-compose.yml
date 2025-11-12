@@ -1,48 +1,64 @@
 services:
-  # --- Base de données MySQL ---
-  mysql:
-    image: mysql:8.0
-    container_name: mysql_db
-    restart: always
+  mysql_db_1:
+    build:
+      context: ./mysql_conf
+      dockerfile: Dockerfile
+      args:
+        CONFIG: node1.cnf
+    container_name: mysql_db_1
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: session_db
       MYSQL_USER: user
       MYSQL_PASSWORD: userpass
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_data_1:/var/lib/mysql
     ports:
       - "3306:3306"
 
-  # --- Serveur web A (instance 1) ---
+  mysql_db_2:
+    build:
+      context: ./mysql_conf
+      dockerfile: Dockerfile
+      args:
+        CONFIG: node2.cnf
+    container_name: mysql_db_2
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: session_db
+      # Should Not create the application user on this replica during init
+      # It will be created once on mysql_db_1 and replicated via GTID
+    volumes:
+      - mysql_data_2:/var/lib/mysql
+    ports:
+      - "3307:3306"
+
   server_1:
     build: ./serverA
     container_name: server_1
     ports:
       - "8001:8000"
-    depends_on:
-      - mysql
+    volumes:
+    - ./serverA:/var/www/html
     environment:
       - DB_HOST=mysql
       - DB_USER=user
       - DB_PASSWORD=userpass
       - DB_NAME=session_db
 
-  # --- Serveur web A (instance 2) ---
   server_2:
     build: ./serverA
     container_name: server_2
     ports:
       - "8002:8000"
-    depends_on:
-      - mysql
+    volumes:
+      - ./serverA:/var/www/html
     environment:
       - DB_HOST=mysql
       - DB_USER=user
       - DB_PASSWORD=userpass
       - DB_NAME=session_db
 
-  # --- HAProxy ---
   haproxy:
     image: haproxy:latest
     container_name: haproxy
@@ -55,4 +71,5 @@ services:
       - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
 
 volumes:
-  mysql_data:
+  mysql_data_1:
+  mysql_data_2:
