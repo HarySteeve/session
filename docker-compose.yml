@@ -66,6 +66,8 @@ services:
       - "8080:8080"
       - "33066:3306"
     depends_on:
+      - mysql_db_1
+      - mysql_db_2
       - server_1
       - server_2
     volumes:

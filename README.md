@@ -11,14 +11,7 @@ docker compose down -v
 docker compose build # CAn be omitted if starting everything for the first time
 docker compose up -d
 ```
-2. a Create heath-check user for HAProxy
-```sql
-CREATE USER IF NOT EXISTS 'haproxy_check'@'%' IDENTIFIED WITH mysql_native_password BY 'checkpass';
-GRANT USAGE ON *.* TO 'haproxy_check'@'%';
-FLUSH PRIVILEGES;
-```
-
-3. Create the replication user on both servers and configure replication
+2. Create the replication user on both servers and configure replication
 ```sql
 -- mysql1
 CREATE USER IF NOT EXISTS 'repl'@'%' IDENTIFIED WITH mysql_native_password BY 'replpass';

@@ -18,11 +18,6 @@ wait_for() {
 wait_for mysql_db_1
 wait_for mysql_db_2
 
-# Create haproxy health-check user
-echo "creating haproxy health-check user on both MySQL nodes..."
-docker exec -i mysql_db_1 mysql -h127.0.0.1 -P3306 -uroot -proot -e "CREATE USER IF NOT EXISTS 'haproxy_check'@'%' IDENTIFIED WITH mysql_native_password BY 'checkpass'; GRANT USAGE ON *.* TO 'haproxy_check'@'%'; FLUSH PRIVILEGES;" || true
-docker exec -i mysql_db_2 mysql -h127.0.0.1 -P3306 -uroot -proot -e "CREATE USER IF NOT EXISTS 'haproxy_check'@'%' IDENTIFIED WITH mysql_native_password BY 'checkpass'; GRANT USAGE ON *.* TO 'haproxy_check'@'%'; FLUSH PRIVILEGES;" || true
-
 # Create replication user (TCP: 3306 mysql_native_password)
 docker exec -i mysql_db_1 mysql -h127.0.0.1 -P3306 -uroot -proot -e "DROP USER IF EXISTS 'repl'@'%'; CREATE USER 'repl'@'%' IDENTIFIED WITH mysql_native_password BY 'replpass'; GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%'; FLUSH PRIVILEGES;"
 docker exec -i mysql_db_2 mysql -h127.0.0.1 -P3306 -uroot -proot -e "DROP USER IF EXISTS 'repl'@'%'; CREATE USER 'repl'@'%' IDENTIFIED WITH mysql_native_password BY 'replpass'; GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%'; FLUSH PRIVILEGES;"
