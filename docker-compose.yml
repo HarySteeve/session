@@ -33,6 +33,23 @@ services:
     ports:
       - "3307:3306"
 
+  mysql_db_3:
+    build:
+      context: ./mysql_conf
+      dockerfile: Dockerfile
+      args:
+        CONFIG: node3.cnf
+    container_name: mysql_db_3
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: session_db
+      # Should Not create the application user on this replica during init
+      # It will be created once on mysql_db_1 and replicated via GTID
+    volumes:
+      - mysql_data_3:/var/lib/mysql
+    ports:
+      - "3308:3306"
+
   server_1:
     build: ./serverA
     container_name: server_1
@@ -40,6 +57,7 @@ services:
       - "8001:8000"
     volumes:
     - ./serverA:/var/www/html
+    - ./haproxy:/var/www/html/haproxy  
     environment:
       - DB_HOST=mysql
       - DB_USER=user
@@ -53,6 +71,7 @@ services:
       - "8002:8000"
     volumes:
       - ./serverA:/var/www/html
+      - ./haproxy:/var/www/html/haproxy  
     environment:
       - DB_HOST=mysql
       - DB_USER=user
@@ -68,6 +87,7 @@ services:
     depends_on:
       - mysql_db_1
       - mysql_db_2
+      - mysql_db_3
       - server_1
       - server_2
     volumes:
@@ -76,3 +96,4 @@ services:
 volumes:
   mysql_data_1:
   mysql_data_2:
+  mysql_data_3:

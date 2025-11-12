@@ -8,5 +8,5 @@ log_slave_updates = ON
 master_info_repository = TABLE
 relay_log_info_repository = TABLE
 sync_binlog = 1
-auto_increment_increment = 2
+auto_increment_increment = 3
 auto_increment_offset = 1

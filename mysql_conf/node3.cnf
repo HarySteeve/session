@@ -1,5 +1,5 @@
 [mysqld]
-server_id = 102
+server_id = 103
 log_bin = mysql-bin
 binlog_format = ROW
 gtid_mode = ON
@@ -9,4 +9,4 @@ master_info_repository = TABLE
 relay_log_info_repository = TABLE
 sync_binlog = 1
 auto_increment_increment = 3
-auto_increment_offset = 2
+auto_increment_offset = 3
