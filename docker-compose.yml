@@ -26,8 +26,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: session_db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: userpass
+      # Should Not create the application user on this replica during init
+      # It will be created once on mysql_db_1 and replicated via GTID
     volumes:
       - mysql_data_2:/var/lib/mysql
     ports:
