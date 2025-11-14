@@ -2,7 +2,7 @@
 set -euo pipefail
 
 docker compose down -v
-docker compose build || true
+# docker compose build || true
 docker compose up -d
 
 wait_for() {

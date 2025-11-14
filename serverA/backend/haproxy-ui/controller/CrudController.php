@@ -11,6 +11,7 @@ if (!is_dir($backupDir))
 
 $action = $_GET['action'] ?? null;
 
+header("content-type: application/json");
 switch ($action) {
     case 'list':
         header('Content-Type: application/json');
@@ -20,28 +21,45 @@ switch ($action) {
     case 'add':
         $name = $_POST['serverName'] ?? null;
         $host = $_POST['serverHost'] ?? null;
-        $balance = $_POST['balanceMode'] ?? null;
+        
         if (!$name || !$host) {
-            echo "Nom ou hôte manquant.";
+            returnErrorResponse("Nom ou hôte manquant");
             exit;
         }
-        echo addMysqlServer($name, $host, $balance);
+
+        try {
+            returnSuccessResponse(addMysqlServer($name, $host, $balance));
+        } catch (Exception $ex) {
+            returnErrorResponse($ex->getMessage());
+        }
+
         break;
 
     case 'delete':
         $name = $_POST['serverName'] ?? null;
-        echo deleteMysqlServer($name);
+
+        try {
+            returnSuccessResponse(deleteMysqlServer($name));
+        } catch (Exception $ex) {
+            returnErrorResponse($ex->getMessage());
+        }
         break;
 
     case 'update':
         $old = $_POST['oldName'] ?? null;
         $new = $_POST['newName'] ?? null;
         $host = $_POST['newHost'] ?? null;
-        echo updateMysqlServer($old, $new, $host);
+        
+        try {
+            returnSuccessResponse(updateMysqlServer($old, $new, $host));
+        } catch (Exception $ex) {
+            returnErrorResponse($ex->getMessage());
+        }
+        
         break;
 
     default:
-        echo "Action invalide.";
+        echo returnErrorResponse("Action invalide.");
 }
 
 function getAllMysqlServers() {
@@ -128,4 +146,12 @@ function setBackendBalance($mode, $backend = 'mysql_servers') {
 
 function restartHaproxy() {
     shell_exec("docker exec haproxy service haproxy reload");
+}
+
+function returnSuccessResponse($message) {
+    echo json_encode(["success" => true, "message" => $message]);
+}
+
+function returnErrorResponse($message) {
+    echo json_encode(["success" => false, "message" => $message]);
 }
