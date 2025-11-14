@@ -25,7 +25,6 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
             <form action="../backend/haproxy-ui/controller/CrudController.php?action=balance" id="balanceForm">
                 <label for="balanceMode">Mode de balance</label>
                 <select id="balanceMode" name="balanceMode">
-                    <option value="">Should be the actual</option>
                     <option value="roundrobin">roundrobin</option>
                     <option value="leastconn">leastconn</option>
                     <option value="source">source</option>
@@ -37,6 +36,38 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
                 <button>Changer</button>
             </form>
         </div>
+
+        <script>
+            ////////////////////////////////
+            // CRUD balance
+            ////////////////////////////////
+
+            (async function loadBalanceMode() {
+                try {
+                    const resp = await fetch('../backend/haproxy-ui/controller/CrudController.php?action=get-balance');
+                    const data = await resp.json();
+                    if (data && data.mode) {
+                        const sel = document.getElementById('balanceMode');
+                        if (sel) 
+                            sel.value = data.mode;
+                    }
+                } catch (err) {
+                    alert('Erreur lors du chargement du mode de balance: ' + err.message);
+                }
+            })();
+
+            
+            const balanceForm = document.getElementById('balanceForm');
+            if (balanceForm) {
+                balanceForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const fd = new FormData(balanceForm);
+                    const res = await fetchAndExpectResponse(await fetch(balanceForm.action, { method: 'POST', body: fd }));
+                    if (res && res.success) 
+                        location.reload();
+                });
+            }
+        </script>
 
         <table border="1" id="table" cellpadding="5">
             <tr>

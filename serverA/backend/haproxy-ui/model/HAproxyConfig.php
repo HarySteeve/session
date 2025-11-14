@@ -39,7 +39,9 @@ class HAProxyBackend {
     }
 
     public function hasServer(string $name): bool {
-        foreach ($this->getServers() as $s) if ($s->name === $name) return true;
+        foreach ($this->getServers() as $s) 
+            if ($s->name === $name) 
+                return true;
         return false;
     }
 
@@ -65,14 +67,15 @@ class HAProxyBackend {
 
     public function getBalance(): ?string {
         foreach ($this->lines as $line) {
-            if (preg_match('/^\s*balance\s+(\S+)/i', $line, $m)) return $m[1];
+            if (preg_match('/^\s*balance\s+(\S+)/i', $line, $m)) 
+                return $m[1];
         }
         return null;
     }
 
     public function addServer(HAProxyServer $server): void {
         if ($this->hasServer($server->name)) {
-            throw new Exception("Le serveur {$server->name} existe déjà dans backend {$this->name}.");
+            throw new Exception("Le serveur {$server->name} existe deja dans backend {$this->name}");
         }
 
         $insertPos = count($this->lines);
@@ -97,6 +100,10 @@ class HAProxyBackend {
     }
 
     public function updateServer(string $oldName, string $newName, string $newHost): bool {
+        if ($newName !== $oldName && $this->hasServer($newName)) {
+            throw new Exception("Le nom de serveur \"$newName\" existe deja dans backend {$this->name}");
+        }
+
         foreach ($this->lines as $i => $line) {
             if (preg_match('/^\s*server\s+' . preg_quote($oldName, '/') . '\s+\S+(?::\d+)?\s+check\b/i', $line)) {
                 $host = $newHost;
@@ -109,7 +116,7 @@ class HAProxyBackend {
                 return true;
             }
         }
-        throw new Exception("Le serveur $oldName n'existe pas dans backend {$this->name}.");
+        throw new Exception("Le serveur $oldName n'existe pas dans backend {$this->name}");
     }
 
     public function renderLines(): array {

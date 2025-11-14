@@ -57,6 +57,29 @@ switch ($action) {
         }
         
         break;
+ 
+    case 'get-balance':
+        try {
+            $mode = getBackendBalance();
+            echo json_encode(["success" => true, "mode" => $mode]);
+        } catch (Exception $ex) {
+            returnErrorResponse($ex->getMessage());
+        }
+        break;
+ 
+    case 'balance':
+        $mode = $_POST['balanceMode'] ?? null;
+        if (!$mode) {
+            returnErrorResponse("Mode de balance manquant");
+            exit;
+        }
+        try {
+            setBackendBalance($mode);
+            returnSuccessResponse("Mode de balance defini: $mode");
+        } catch (Exception $ex) {
+            returnErrorResponse($ex->getMessage());
+        }
+        break;
 
     default:
         echo returnErrorResponse("Action invalide.");
@@ -64,7 +87,7 @@ switch ($action) {
 
 function getAllMysqlServers() {
     global $cfgObj;
-    $backend = $cfgObj->getBackend('mysql_servers');
+    $backend = $cfgObj->getBackend(backendName: 'mysql_servers');
     $servers = $backend->getServers();
     $out = [];
     foreach ($servers as $s) 
