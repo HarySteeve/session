@@ -1,9 +1,35 @@
 <?php 
 require_once __DIR__ . '/../model/HAproxyConfig.php';
-require_once __DIR__ . '/CrudController.php';
 
-$configPath = __DIR__ . '/../../../haproxy.cfg';
-$cfgObj = new HAProxyConfig($configPath);
+function findHaproxyConfigPath(): ?string {
+    $dir = __DIR__;
+    while (true) {
+        $cand1 = $dir . '/haproxy.cfg';
+        $cand2 = $dir . '/haproxy/haproxy.cfg';
+        if (file_exists($cand1) && is_readable($cand1)) 
+            return realpath($cand1);
+        if (file_exists($cand2) && is_readable($cand2)) 
+            return realpath($cand2);
+        $parent = dirname($dir);
+        if ($parent === $dir) 
+            break;
+        $dir = $parent;
+    }
+    return null;
+}
+
+$configPath = findHaproxyConfigPath();
+if ($configPath === null) {
+    echo json_encode(["success" => false, "message" => "haproxy.cfg introuvable"]);
+    exit;
+}
+
+try {
+    $cfgObj = new HAProxyConfig($configPath);
+} catch (Exception $ex) {
+    echo json_encode(["success" => false, "message" => $ex->getMessage()]);
+    exit;
+}
 
 $backupDir = __DIR__ . '/../../../backups/';
 if (!is_dir($backupDir)) 

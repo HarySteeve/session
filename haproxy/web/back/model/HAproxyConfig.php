@@ -138,7 +138,13 @@ class HAProxyConfig {
 
     public function __construct(string $path) {
         $this->path = $path;
+        if (!file_exists($this->path) || !is_readable($this->path)) {
+            throw new Exception("Fichier de configuration introuvable ou non lisible: {$this->path}");
+        }
         $this->raw = file_get_contents($this->path);
+        if ($this->raw === false) {
+            throw new Exception("Impossible de lire le fichier de configuration: {$this->path}");
+        }
         $this->nl = (strpos($this->raw, "\r\n") !== false) ? "\r\n" : "\n";
         $this->lines = explode($this->nl, $this->raw);
     }
