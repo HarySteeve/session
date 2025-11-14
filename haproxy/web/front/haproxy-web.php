@@ -109,7 +109,7 @@ $controllerURL = "$backendURL/controller/CrudController.php";
 
     <div>
         <h3>Ajouter un serveur</h3>
-        <form action="<?= $controllerURL ?>  ?>?action=add" id="addServerForm" method="post">
+        <form action="<?= $controllerURL ?>?action=add" id="addServerForm" method="post">
             <input type="hidden" name="backend" value="web_servers">
             <label>Nom du serveur: <input name="serverName" value="web3" required></label><br>
             <label>Hôte du serveur: <input name="serverHost" value="server_3" required></label><br>
@@ -122,7 +122,7 @@ $controllerURL = "$backendURL/controller/CrudController.php";
 
     <div>
         <h3>Modifier un serveur</h3>
-        <form id="modifyServerForm" action="<?= $controllerURL ?>  ?>?action=update" method="post">
+        <form id="modifyServerForm" action="<?= $controllerURL ?>?action=update" method="post">
             <input type="hidden" name="backend" value="web_servers">
             <label>Ancien nom: <input id="oldName" name="oldName" readonly required></label><br>
             <label>Nouveau nom: <input id="newName" name="newName" required></label><br>
@@ -185,7 +185,7 @@ $controllerURL = "$backendURL/controller/CrudController.php";
                     formData.append('backend', 'web_servers');
 
                     try {
-                        const resp = await fetch('<?= $controllerURL ?>  ?>?action=delete', {
+                        const resp = await fetch('<?= $controllerURL ?>?action=delete', {
                             method: 'POST',
                             body: formData
                         });

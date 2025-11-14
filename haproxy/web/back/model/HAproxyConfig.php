@@ -78,14 +78,37 @@ class HAProxyBackend {
             throw new Exception("Le serveur {$server->name} existe deja dans backend {$this->name}");
         }
 
+        // Default: append at the end
         $insertPos = count($this->lines);
 
+        /**
+         * Prefer to insert after the last explicit 'server' line so we don't insert
+         * after trailing comments or unrelated blocks inside the backend body.
+         */
+
         for ($i = count($this->lines) - 1; $i >= 0; $i--) {
-            if (trim($this->lines[$i]) !== '') {
+            $ln = $this->lines[$i];
+            if (preg_match('/^\s*server\s+/i', $ln)) {
                 $insertPos = $i + 1;
                 break;
             }
         }
+
+        /**
+         * If no server lines found, insert after the last
+         * meaningful non-comment line (skip trailing comments/empty lines)
+         */
+        if ($insertPos === count($this->lines)) {
+            for ($i = count($this->lines) - 1; $i >= 0; $i--) {
+                $trim = trim($this->lines[$i]);
+                if ($trim === '' || strpos(ltrim($this->lines[$i]), '#') === 0) {
+                    continue;
+                }
+                $insertPos = $i + 1;
+                break;
+            }
+        }
+
         array_splice($this->lines, $insertPos, 0, [$server->toLine()]);
     }
 
