@@ -33,6 +33,7 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
                     <option value="hdr">hdr</option>
                     <option value="rdp-cookie">rdp-cookie</option>
                 </select>
+                <input type="hidden" name="backend" value="mysql_servers">
                 <button>Changer</button>
             </form>
         </div>
@@ -76,7 +77,7 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
                 <th>Port</th>
                 <th>Action</th>
             </tr>
-            <?php foreach (getAllMysqlServers() as $srv): ?>
+            <?php foreach (getAllServers() as $srv): ?>
                 <tr>
                     <td><?= htmlspecialchars($srv['name']) ?></td>
                     <td><?= htmlspecialchars($srv['host']) ?></td>
@@ -95,6 +96,7 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
     <div>
         <h3>Ajouter un serveur</h3>
         <form action="../backend/haproxy-ui/controller/CrudController.php?action=add" id="addMysqlServerForm" method="post">
+            <input type="hidden" name="backend" value="mysql_servers">
             <label>Nom du serveur: <input name="serverName" value="mysql3" required></label><br>
             <label>Hôte du serveur: <input name="serverHost" value="mysql_db_3" required></label><br>
             <label>Port: <input name="serverPort" type="number" value="3306"></label><br>
@@ -107,6 +109,7 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
     <div>
         <h3>Modifier un serveur</h3>
         <form id="modifyMysqlServerForm" action="../backend/haproxy-ui/controller/CrudController.php?action=update" method="post">
+            <input type="hidden" name="backend" value="mysql_servers">
             <label>Ancien nom: <input id="oldName" name="oldName" readonly required></label><br>
             <label>Nouveau nom: <input id="newName" name="newName" required></label><br>
             <label>Nouvel hôte: <input id="newHost" name="newHost" required></label><br>
@@ -115,45 +118,22 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
         </form>
     </div>
 
-    <script>
-        async function fetchAndExpectResponse(response) {
-            const text = await response.text();
-            try {
-                const data = JSON.parse(text);
-                if (data.success)
-                    alert(`Succes: ${data.message}`);
-                else
-                    alert(`Erreur: ${data.message}`);
-                return data;
-            } catch (err) {
-                alert('Non JSON response: ' + text);
-                return { success: false, message: text };
-            }
-        }
-    </script>
+    <script src="js/haproxy-common.js"></script>
 
     <script>
         ////////////////////////////////
-        // Add server
+        // Add
         ////////////////////////////////
 
         const addForm = document.getElementById("addMysqlServerForm");
         addForm.addEventListener("submit", async (e)=> {
             e.preventDefault();
-            const formData = new FormData(addForm);
-
-            const addResult = await fetchAndExpectResponse(await fetch(addForm.action, {
-                method: "POST",
-                body: formData
-            }));
-            if (addResult && addResult.success) {
-                location.reload();
-            }
+            await submitFormAndReload(addForm);
         });
 
 
         ////////////////////////////////
-        // Server modification
+        // Modify
         ////////////////////////////////
 
         const table = document.getElementById("table");
@@ -190,8 +170,15 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
             });
         });
 
+        
+        const modifyForm = document.getElementById("modifyMysqlServerForm");
+        modifyForm.addEventListener("submit", async (e)=> {
+            e.preventDefault();
+            await submitFormAndReload(modifyForm);
+        });
+
         ////////////////////////////////
-        // Server deletion
+        // Delete
         ////////////////////////////////
 
         document.querySelectorAll('.delete-btn').forEach(btn => {
@@ -203,6 +190,7 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
 
                 const formData = new FormData();
                 formData.append('serverName', name);
+                formData.append('backend', 'mysql_servers');
 
                 try {
                     const resp = await fetch('../backend/haproxy-ui/controller/CrudController.php?action=delete', {
@@ -217,20 +205,6 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
                     alert('Erreur lors de la suppression ' + err);
                 }
             });
-        });
-
-        const modifyForm = document.getElementById("modifyMysqlServerForm");
-        modifyForm.addEventListener("submit", async (e)=> {
-            e.preventDefault();
-            const formData = new FormData(modifyForm);
-
-            const res = await fetchAndExpectResponse(await fetch(modifyForm.action, {
-                method: "POST",
-                body: formData
-            }));
-            if (res && res.success) {
-                location.reload();
-            }
         });
     </script>
 

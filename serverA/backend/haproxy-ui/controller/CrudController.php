@@ -10,18 +10,20 @@ if (!is_dir($backupDir))
     mkdir($backupDir, 0777, true);
 
 $action = $_GET['action'] ?? null;
+$targetBackend = $_POST['backend'] ?? $_GET['backend'] ?? 'mysql_servers';
 
 header("content-type: application/json");
 switch ($action) {
     case 'list':
         header('Content-Type: application/json');
-        echo json_encode(getAllMysqlServers());
+        echo json_encode(getAllMysqlServers($targetBackend));
         break;
 
     case 'add':
         $name = $_POST['serverName'] ?? null;
         $host = $_POST['serverHost'] ?? null;
         $port = isset($_POST['serverPort']) && is_numeric($_POST['serverPort']) ? (int)$_POST['serverPort'] : null;
+        $balance = $_POST['balanceMode'] ?? null;
         
         if (!$name || !$host) {
             returnErrorResponse("Nom ou hôte manquant");
@@ -29,7 +31,7 @@ switch ($action) {
         }
 
         try {
-            returnSuccessResponse(addMysqlServer($name, $host, $port, $balance));
+            returnSuccessResponse(addServer($name, $host, $port, $balance, $targetBackend));
         } catch (Exception $ex) {
             returnErrorResponse($ex->getMessage());
         }
@@ -40,7 +42,7 @@ switch ($action) {
         $name = $_POST['serverName'] ?? null;
 
         try {
-            returnSuccessResponse(deleteMysqlServer($name));
+            returnSuccessResponse(deleteMysqlServer($name, $targetBackend));
         } catch (Exception $ex) {
             returnErrorResponse($ex->getMessage());
         }
@@ -53,7 +55,7 @@ switch ($action) {
         $newPort = isset($_POST['newPort']) && is_numeric($_POST['newPort']) ? (int)$_POST['newPort'] : null;
         
         try {
-            returnSuccessResponse(updateMysqlServer($old, $new, $host, $newPort));
+            returnSuccessResponse(updateMysqlServer($old, $new, $host, $newPort, $targetBackend));
         } catch (Exception $ex) {
             returnErrorResponse($ex->getMessage());
         }
@@ -62,7 +64,7 @@ switch ($action) {
  
     case 'get-balance':
         try {
-            $mode = getBackendBalance();
+            $mode = getBackendBalance($targetBackend);
             echo json_encode(["success" => true, "mode" => $mode]);
         } catch (Exception $ex) {
             returnErrorResponse($ex->getMessage());
@@ -76,7 +78,7 @@ switch ($action) {
             exit;
         }
         try {
-            setBackendBalance($mode);
+            setBackendBalance($mode, $targetBackend);
             returnSuccessResponse("Mode de balance defini: $mode");
         } catch (Exception $ex) {
             returnErrorResponse($ex->getMessage());
@@ -87,24 +89,24 @@ switch ($action) {
         echo returnErrorResponse("Action invalide.");
 }
 
-function getAllMysqlServers() {
+function getAllMysqlServers($backendName = 'mysql_servers') {
     global $cfgObj;
-    $backend = $cfgObj->getBackend(backendName: 'mysql_servers');
+    $backend = $cfgObj->getBackend($backendName);
     $servers = $backend->getServers();
     $out = [];
-    foreach ($servers as $s) 
+    foreach ($servers as $s)
         $out[] = ['name' => $s->name, 'host' => $s->host, 'port' => $s->port];
     return $out;
 }
 
-function addMysqlServer($name, $host, $port = null, $balanceMode = null) {
+function addServer($name, $host, $port = null, $balanceMode = null, $backendName = 'mysql_servers') {
     global $cfgObj, $backupDir;
     
     $backupFile = $cfgObj->backup($backupDir);
     if (!file_exists($backupFile))
          throw new Exception("Echec de la sauvegarde avant ajout de serveur");
         
-    $backend = $cfgObj->getBackend('mysql_servers');
+    $backend = $cfgObj->getBackend($backendName);
     if ($balanceMode) 
         $backend->setBalance($balanceMode);
 
@@ -116,14 +118,13 @@ function addMysqlServer($name, $host, $port = null, $balanceMode = null) {
     return true;
 }
 
-function deleteMysqlServer($name) {
+function deleteMysqlServer($name, $backendName = 'mysql_servers') {
     global $cfgObj, $backupDir;
     $backupFile = $cfgObj->backup($backupDir);
     
     if (!file_exists($backupFile)) 
         throw new Exception("Echec de la sauvegarde avant suppression de serveur");
-
-    $backend = $cfgObj->getBackend('mysql_servers');
+    $backend = $cfgObj->getBackend($backendName);
     $backend->deleteServer($name);
     $cfgObj->setBackend($backend);
     $cfgObj->save();
@@ -131,13 +132,13 @@ function deleteMysqlServer($name) {
     return true;
 }
 
-function updateMysqlServer($oldName, $newName, $newHost, ?int $newPort = null) {
+function updateMysqlServer($oldName, $newName, $newHost, ?int $newPort = null, $backendName = 'mysql_servers') {
     global $cfgObj, $backupDir;
     $backupFile = $cfgObj->backup($backupDir);
     if (!file_exists($backupFile)) 
         throw new Exception("Echec de la sauvegarde avant mise a jour de serveur");
 
-    $backend = $cfgObj->getBackend('mysql_servers');
+    $backend = $cfgObj->getBackend($backendName);
     $backend->updateServer($oldName, $newName, $newHost, $newPort);
     $cfgObj->setBackend($backend);
     $cfgObj->save();
