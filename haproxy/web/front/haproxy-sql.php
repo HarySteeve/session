@@ -68,7 +68,8 @@ $controllerURL = "$backendURL/controller/CrudController.php";
                         return;
                     data.forEach(srv => {
                         const tr = document.createElement('tr');
-                        tr.innerHTML = `<td>${escapeHtml(srv.name)}</td><td>${escapeHtml(srv.host)}</td><td>${escapeHtml(srv.port||3306)}</td><td><button type="button" class="modify-btn" data-name="${escapeAttr(srv.name)}" data-host="${escapeAttr(srv.host)}" data-port="${escapeAttr(srv.port||3306)}">Modifier</button> <button type="button" class="delete-btn" data-name="${escapeAttr(srv.name)}">Supprimer</button></td>`;
+                        tr.innerHTML = `
+                        <td>${escapeHtml(srv.name)}</td><td>${escapeHtml(srv.host)}</td><td>${escapeHtml(srv.port||3306)}</td><td><button type="button" class="modify-btn" data-name="${escapeAttr(srv.name)}" data-host="${escapeAttr(srv.host)}" data-port="${escapeAttr(srv.port||3306)}">Modifier</button> <button type="button" class="delete-btn" data-name="${escapeAttr(srv.name)}">Supprimer</button></td>`;
                         tbody.appendChild(tr);
                     });
                 }catch(err){
@@ -145,7 +146,7 @@ $controllerURL = "$backendURL/controller/CrudController.php";
 
 
         ////////////////////////////////
-        // Modify
+        // Modify & Delete (using event delegation)
         ////////////////////////////////
 
         const table = document.getElementById("table");
@@ -156,15 +157,17 @@ $controllerURL = "$backendURL/controller/CrudController.php";
         const newPortInput = document.getElementById('newPort');
         const updateBtn = document.getElementById('updateBtn');
 
-        document.querySelectorAll('.modify-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+        // Use event delegation so dynamically added buttons work
+        table.addEventListener('click', (e) => {
+            const btn = e.target.closest('.modify-btn');
+            if (btn && table.contains(btn)) {
                 const name = btn.dataset.name || '';
                 const host = btn.dataset.host || '';
 
                 oldNameInput.value = name;
                 newNameInput.value = name;
                 newHostInput.value = host;
-                if (newPortInput) 
+                if (newPortInput)
                     newPortInput.value = btn.dataset.port || 3306;
 
                 // Highlight the selected row
@@ -173,13 +176,39 @@ $controllerURL = "$backendURL/controller/CrudController.php";
                 if (row)
                     row.classList.add('selected-row');
 
-                // Focus the new name
                 document.getElementById('modifyMysqlServerForm').scrollIntoView({
                     behavior: 'smooth',
                     block: 'center'
                 });
                 newNameInput.focus();
-            });
+                return;
+            }
+
+            const del = e.target.closest('.delete-btn');
+            if (del && table.contains(del)) {
+                (async () => {
+                    const name = del.dataset.name;
+                    if (!name) return;
+                    if (!confirm(`Supprimer le serveur "${name}" ?`)) return;
+
+                    const formData = new FormData();
+                    formData.append('serverName', name);
+                    formData.append('backend', 'mysql_servers');
+
+                    try {
+                        const resp = await fetch('<?= $controllerURL ?>?action=delete', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const result = await fetchAndExpectResponse(resp);
+                        if (result && result.success) {
+                            location.reload();
+                        }
+                    } catch (err) {
+                        alert('Erreur lors de la suppression ' + err);
+                    }
+                })();
+            }
         });
 
         
@@ -187,36 +216,6 @@ $controllerURL = "$backendURL/controller/CrudController.php";
         modifyForm.addEventListener("submit", async (e)=> {
             e.preventDefault();
             await submitFormAndReload(modifyForm);
-        });
-
-        ////////////////////////////////
-        // Delete
-        ////////////////////////////////
-
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const name = btn.dataset.name;
-                if (!name) return;
-                if (!confirm(`Supprimer le serveur "${name}" ?`)) 
-                    return;
-
-                const formData = new FormData();
-                formData.append('serverName', name);
-                formData.append('backend', 'mysql_servers');
-
-                try {
-                    const resp = await fetch('<?= $controllerURL ?>?action=delete', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const result = await fetchAndExpectResponse(resp);
-                    if (result && result.success) {
-                        location.reload();
-                    }
-                } catch (err) {
-                    alert('Erreur lors de la suppression ' + err);
-                }
-            });
         });
     </script>
 

@@ -44,7 +44,7 @@ $controllerURL = "$backendURL/controller/CrudController.php";
         <script>
             async function loadWebServers() {
                 try {
-                    const resp = await fetch('<?= $controllerURL ?>  ?>?action=list&backend=web_servers');
+                    const resp = await fetch('<?= $controllerURL ?>?action=list&backend=web_servers');
                     const data = await resp.json();
                     const tbody = document.getElementById('table');
                     if (!Array.isArray(data)) return;
@@ -70,7 +70,7 @@ $controllerURL = "$backendURL/controller/CrudController.php";
 
             (async function loadBalanceMode() {
                 try {
-                    const resp = await fetch('<?= $controllerURL ?>  ?>?action=get-balance&backend=web_servers');
+                    const resp = await fetch('<?= $controllerURL ?>?action=get-balance&backend=web_servers');
                     const data = await resp.json();
                     if (data && data.mode) {
                         const sel = document.getElementById('balanceMode');
@@ -144,7 +144,7 @@ $controllerURL = "$backendURL/controller/CrudController.php";
         });
 
         ////////////////////////////////
-        // Modify
+        // Modify & Delete (using evenT delegation)
         ////////////////////////////////
 
         const oldNameInput = document.getElementById('oldName');
@@ -152,8 +152,10 @@ $controllerURL = "$backendURL/controller/CrudController.php";
         const newHostInput = document.getElementById('newHost');
         const newPortInput = document.getElementById('newPort');
 
-        document.querySelectorAll('.modify-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+        const tableElem = document.getElementById('table');
+        tableElem.addEventListener('click', (e) => {
+            const btn = e.target.closest('.modify-btn');
+            if (btn && tableElem.contains(btn)) {
                 const name = btn.dataset.name || '';
                 const host = btn.dataset.host || '';
 
@@ -168,7 +170,32 @@ $controllerURL = "$backendURL/controller/CrudController.php";
 
                 document.getElementById('modifyServerForm').scrollIntoView({behavior: 'smooth', block: 'center'});
                 newNameInput.focus();
-            });
+                return;
+            }
+
+            const del = e.target.closest('.delete-btn');
+            if (del && tableElem.contains(del)) {
+                (async () => {
+                    const name = del.dataset.name;
+                    if (!name) return;
+                    if (!confirm(`Supprimer le serveur "${name}" ?`)) return;
+
+                    const formData = new FormData();
+                    formData.append('serverName', name);
+                    formData.append('backend', 'web_servers');
+
+                    try {
+                        const resp = await fetch('<?= $controllerURL ?>  ?>?action=delete', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const result = await fetchAndExpectResponse(resp);
+                        if (result && result.success) location.reload();
+                    } catch (err) {
+                        alert('Erreur lors de la suppression ' + err);
+                    }
+                })();
+            }
         });
 
         const modifyForm = document.getElementById("modifyServerForm");
@@ -177,32 +204,6 @@ $controllerURL = "$backendURL/controller/CrudController.php";
             await submitFormAndReload(modifyForm);
         });
 
-        ////////////////////////////////
-        // Delete
-        ////////////////////////////////
-
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const name = btn.dataset.name;
-                if (!name) return;
-                if (!confirm(`Supprimer le serveur "${name}" ?`)) return;
-
-                const formData = new FormData();
-                formData.append('serverName', name);
-                formData.append('backend', 'web_servers');
-
-                try {
-                    const resp = await fetch('<?= $controllerURL ?>  ?>?action=delete', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const result = await fetchAndExpectResponse(resp);
-                    if (result && result.success) location.reload();
-                } catch (err) {
-                    alert('Erreur lors de la suppression ' + err);
-                }
-            });
-        });
     </script>
 
 </body>
