@@ -1,5 +1,6 @@
-<?php
-require_once 'http://localhost:4321/controller/MainController.php';
+<?php 
+$backendURL = "../back";
+$controllerURL = "$backendURL/controller/CrudController.php";
 ?>
 
 <!DOCTYPE html>
@@ -7,7 +8,7 @@ require_once 'http://localhost:4321/controller/MainController.php';
 
 <head>
     <meta charset="UTF-8">
-    <title>Gestion des serveurs MySQL HAProxy</title>
+    <title>Gestion des serveurs Web HAProxy</title>
 
     <style>
         .selected-row {
@@ -20,10 +21,10 @@ require_once 'http://localhost:4321/controller/MainController.php';
 <body>
 
     <div>
-        <h2>Configuration serveurs mysql</h2>
+        <h2>Configuration serveurs web</h2>
 
         <div>
-            <form action="http://localhost:4321/CrudController.php?action=balance" id="balanceForm">
+            <form action="<?= $controllerURL ?>?action=balance" id="balanceForm">
                 <label for="balanceMode">Mode de balance</label>
                 <select id="balanceMode" name="balanceMode">
                     <option value="roundrobin">roundrobin</option>
@@ -34,11 +35,34 @@ require_once 'http://localhost:4321/controller/MainController.php';
                     <option value="hdr">hdr</option>
                     <option value="rdp-cookie">rdp-cookie</option>
                 </select>
-                <input type="hidden" name="backend" value="mysql_servers">
+                <input type="hidden" name="backend" value="web_servers">
                 <button>Changer</button>
             </form>
         </div>
 
+        <script src="js/haproxy-common.js"></script>
+        <script>
+            async function loadWebServers() {
+                try {
+                    const resp = await fetch('<?= $controllerURL ?>  ?>?action=list&backend=web_servers');
+                    const data = await resp.json();
+                    const tbody = document.getElementById('table');
+                    if (!Array.isArray(data)) return;
+                    data.forEach(srv => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td>${escapeHtml(srv.name)}</td><td>${escapeHtml(srv.host)}</td><td>${escapeHtml(srv.port||80)}</td><td><button type="button" class="modify-btn" data-name="${escapeAttr(srv.name)}" data-host="${escapeAttr(srv.host)}" data-port="${escapeAttr(srv.port||80)}">Modifier</button> <button type="button" class="delete-btn" data-name="${escapeAttr(srv.name)}">Supprimer</button></td>`;
+                        tbody.appendChild(tr);
+                    });
+                } catch (e) {
+                    console.warn('Could not load web servers', e);
+                }
+            }
+
+            function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]); }
+            function escapeAttr(s) { return String(s).replace(/"/g,'&quot;'); }
+            loadWebServers();
+        </script>
+        
         <script>
             ////////////////////////////////
             // CRUD balance
@@ -46,7 +70,7 @@ require_once 'http://localhost:4321/controller/MainController.php';
 
             (async function loadBalanceMode() {
                 try {
-                    const resp = await fetch('http://localhost:4321/CrudController.php?action=get-balance');
+                    const resp = await fetch('<?= $controllerURL ?>  ?>?action=get-balance&backend=web_servers');
                     const data = await resp.json();
                     if (data && data.mode) {
                         const sel = document.getElementById('balanceMode');
@@ -58,7 +82,6 @@ require_once 'http://localhost:4321/controller/MainController.php';
                 }
             })();
 
-            
             const balanceForm = document.getElementById('balanceForm');
             if (balanceForm) {
                 balanceForm.addEventListener('submit', async (e) => {
@@ -78,17 +101,7 @@ require_once 'http://localhost:4321/controller/MainController.php';
                 <th>Port</th>
                 <th>Action</th>
             </tr>
-            <?php foreach (getAllServers() as $srv): ?>
-                <tr>
-                    <td><?= htmlspecialchars($srv['name']) ?></td>
-                    <td><?= htmlspecialchars($srv['host']) ?></td>
-                    <td><?= htmlspecialchars($srv['port'] ?? 3306) ?></td>
-                    <td>
-                        <button type="button" class="modify-btn" data-name="<?= htmlspecialchars($srv['name']) ?>" data-host="<?= htmlspecialchars($srv['host']) ?>" data-port="<?= htmlspecialchars($srv['port'] ?? 3306) ?>">Modifier</button>
-                        <button type="button" class="delete-btn" data-name="<?= htmlspecialchars($srv['name']) ?>">Supprimer</button>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
+            <!-- JS -->
         </table>
     </div>
 
@@ -96,11 +109,11 @@ require_once 'http://localhost:4321/controller/MainController.php';
 
     <div>
         <h3>Ajouter un serveur</h3>
-        <form action="http://localhost:4321/CrudController.php?action=add" id="addMysqlServerForm" method="post">
-            <input type="hidden" name="backend" value="mysql_servers">
-            <label>Nom du serveur: <input name="serverName" value="mysql3" required></label><br>
-            <label>Hôte du serveur: <input name="serverHost" value="mysql_db_3" required></label><br>
-            <label>Port: <input name="serverPort" type="number" value="3306"></label><br>
+        <form action="<?= $controllerURL ?>  ?>?action=add" id="addServerForm" method="post">
+            <input type="hidden" name="backend" value="web_servers">
+            <label>Nom du serveur: <input name="serverName" value="web3" required></label><br>
+            <label>Hôte du serveur: <input name="serverHost" value="server_3" required></label><br>
+            <label>Port: <input name="serverPort" type="number" value="8000"></label><br>
             <button type="submit">Ajouter</button>
         </form>
     </div>
@@ -109,41 +122,35 @@ require_once 'http://localhost:4321/controller/MainController.php';
 
     <div>
         <h3>Modifier un serveur</h3>
-        <form id="modifyMysqlServerForm" action="http://localhost:4321/CrudController.php?action=update" method="post">
-            <input type="hidden" name="backend" value="mysql_servers">
+        <form id="modifyServerForm" action="<?= $controllerURL ?>  ?>?action=update" method="post">
+            <input type="hidden" name="backend" value="web_servers">
             <label>Ancien nom: <input id="oldName" name="oldName" readonly required></label><br>
             <label>Nouveau nom: <input id="newName" name="newName" required></label><br>
             <label>Nouvel hôte: <input id="newHost" name="newHost" required></label><br>
-            <label>Nouveau port: <input id="newPort" name="newPort" type="number" value=""></label><br>
+            <label>Nouveau port: <input id="newPort" name="newPort" type="number" value="80"></label><br>
             <button type="submit" id="updateBtn">Confirmer la modification</button>
         </form>
     </div>
-
-    <script src="js/haproxy-common.js"></script>
 
     <script>
         ////////////////////////////////
         // Add
         ////////////////////////////////
-
-        const addForm = document.getElementById("addMysqlServerForm");
+        
+        const addForm = document.getElementById("addServerForm");
         addForm.addEventListener("submit", async (e)=> {
             e.preventDefault();
             await submitFormAndReload(addForm);
         });
 
-
         ////////////////////////////////
         // Modify
         ////////////////////////////////
 
-        const table = document.getElementById("table");
-        
         const oldNameInput = document.getElementById('oldName');
         const newNameInput = document.getElementById('newName');
         const newHostInput = document.getElementById('newHost');
         const newPortInput = document.getElementById('newPort');
-        const updateBtn = document.getElementById('updateBtn');
 
         document.querySelectorAll('.modify-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -153,26 +160,18 @@ require_once 'http://localhost:4321/controller/MainController.php';
                 oldNameInput.value = name;
                 newNameInput.value = name;
                 newHostInput.value = host;
-                if (newPortInput) 
-                    newPortInput.value = btn.dataset.port || 3306;
+                if (newPortInput) newPortInput.value = btn.dataset.port || 80;
 
-                // Highlight the selected row
                 document.querySelectorAll('#table tr').forEach(r => r.classList.remove('selected-row'));
                 const row = btn.closest('tr');
-                if (row)
-                    row.classList.add('selected-row');
+                if (row) row.classList.add('selected-row');
 
-                // Focus the new name
-                document.getElementById('modifyMysqlServerForm').scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
+                document.getElementById('modifyServerForm').scrollIntoView({behavior: 'smooth', block: 'center'});
                 newNameInput.focus();
             });
         });
 
-        
-        const modifyForm = document.getElementById("modifyMysqlServerForm");
+        const modifyForm = document.getElementById("modifyServerForm");
         modifyForm.addEventListener("submit", async (e)=> {
             e.preventDefault();
             await submitFormAndReload(modifyForm);
@@ -186,22 +185,19 @@ require_once 'http://localhost:4321/controller/MainController.php';
             btn.addEventListener('click', async () => {
                 const name = btn.dataset.name;
                 if (!name) return;
-                if (!confirm(`Supprimer le serveur "${name}" ?`)) 
-                    return;
+                if (!confirm(`Supprimer le serveur "${name}" ?`)) return;
 
                 const formData = new FormData();
                 formData.append('serverName', name);
-                formData.append('backend', 'mysql_servers');
+                formData.append('backend', 'web_servers');
 
                 try {
-                    const resp = await fetch('http://localhost:4321/CrudController.php?action=delete', {
+                    const resp = await fetch('<?= $controllerURL ?>  ?>?action=delete', {
                         method: 'POST',
                         body: formData
                     });
                     const result = await fetchAndExpectResponse(resp);
-                    if (result && result.success) {
-                        location.reload();
-                    }
+                    if (result && result.success) location.reload();
                 } catch (err) {
                     alert('Erreur lors de la suppression ' + err);
                 }

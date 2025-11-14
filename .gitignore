@@ -1,2 +1,3 @@
 backups/*
 haproxy_*.cfg
+vendor/*

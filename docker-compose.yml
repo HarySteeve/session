@@ -71,7 +71,7 @@ services:
       - "8002:8000"
     volumes:
       - ./serverA:/var/www/html
-      - ./haproxy:/var/www/html/haproxy  
+      # - ./haproxy:/var/www/html/haproxy  
     environment:
       - DB_HOST=mysql
       - DB_USER=user
@@ -92,26 +92,18 @@ services:
       - mysql_db_3
       - server_1
       - server_2
-      - haproxy_front
-      - haproxy_back
+      - haproxy_web
     volumes:
       - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
 
-  haproxy_front:
-    build: ./haproxy/front
-    container_name: haproxy_front
+  haproxy_web:
+    build: ./haproxy/web
+    container_name: haproxy_web
     ports:
-      - "1234:80"
+      - "1234:1234"
     volumes:
-      - ./haproxy/front:/var/www/html
-
-  haproxy_back:
-    build: ./haproxy/back
-    container_name: haproxy_back
-    ports:
-      - "4321:80"
-    volumes:
-      - ./haproxy/back:/var/www/html
+      - ./haproxy/web:/var/www/html
+      - ./haproxy:/var/www/html/haproxy
 
 volumes:
   mysql_data_1:

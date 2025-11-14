@@ -1,7 +1,7 @@
 <?php 
 require_once __DIR__ . '/../model/HAproxyConfig.php';
 
-$configPath = __DIR__ . '/../../../haproxy/haproxy.cfg';
+$configPath = __DIR__ . '/../../../haproxy.cfg';
 $cfgObj = new HAProxyConfig($configPath);
 
 function getAllServers($backendName = 'mysql_servers') {

@@ -2,10 +2,10 @@
 require_once __DIR__ . '/../model/HAproxyConfig.php';
 require_once __DIR__ . '/CrudController.php';
 
-$configPath = __DIR__ . '/../../../haproxy/haproxy.cfg';
+$configPath = __DIR__ . '/../../../haproxy.cfg';
 $cfgObj = new HAProxyConfig($configPath);
 
-$backupDir = __DIR__ . '/../../../haproxy/backups/';
+$backupDir = __DIR__ . '/../../../backups/';
 if (!is_dir($backupDir)) 
     mkdir($backupDir, 0777, true);
 
