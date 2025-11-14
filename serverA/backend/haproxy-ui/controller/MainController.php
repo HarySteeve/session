@@ -10,6 +10,6 @@ function getAllMysqlServers() {
     $servers = $backend->getServers();
     $out = [];
     foreach ($servers as $s) 
-        $out[] = ['name' => $s->name, 'host' => $s->host];
+        $out[] = ['name' => $s->name, 'host' => $s->host, 'port' => $s->port];
     return $out;
 }

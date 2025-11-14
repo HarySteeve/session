@@ -21,6 +21,7 @@ switch ($action) {
     case 'add':
         $name = $_POST['serverName'] ?? null;
         $host = $_POST['serverHost'] ?? null;
+        $port = isset($_POST['serverPort']) && is_numeric($_POST['serverPort']) ? (int)$_POST['serverPort'] : null;
         
         if (!$name || !$host) {
             returnErrorResponse("Nom ou hôte manquant");
@@ -28,7 +29,7 @@ switch ($action) {
         }
 
         try {
-            returnSuccessResponse(addMysqlServer($name, $host, $balance));
+            returnSuccessResponse(addMysqlServer($name, $host, $port, $balance));
         } catch (Exception $ex) {
             returnErrorResponse($ex->getMessage());
         }
@@ -49,9 +50,10 @@ switch ($action) {
         $old = $_POST['oldName'] ?? null;
         $new = $_POST['newName'] ?? null;
         $host = $_POST['newHost'] ?? null;
+        $newPort = isset($_POST['newPort']) && is_numeric($_POST['newPort']) ? (int)$_POST['newPort'] : null;
         
         try {
-            returnSuccessResponse(updateMysqlServer($old, $new, $host));
+            returnSuccessResponse(updateMysqlServer($old, $new, $host, $newPort));
         } catch (Exception $ex) {
             returnErrorResponse($ex->getMessage());
         }
@@ -91,11 +93,11 @@ function getAllMysqlServers() {
     $servers = $backend->getServers();
     $out = [];
     foreach ($servers as $s) 
-        $out[] = ['name' => $s->name, 'host' => $s->host];
+        $out[] = ['name' => $s->name, 'host' => $s->host, 'port' => $s->port];
     return $out;
 }
 
-function addMysqlServer($name, $host, $balanceMode = null) {
+function addMysqlServer($name, $host, $port = null, $balanceMode = null) {
     global $cfgObj, $backupDir;
     
     $backupFile = $cfgObj->backup($backupDir);
@@ -106,7 +108,8 @@ function addMysqlServer($name, $host, $balanceMode = null) {
     if ($balanceMode) 
         $backend->setBalance($balanceMode);
 
-    $backend->addServer(new HAProxyServer($name, $host));
+    $portVal = is_numeric($port) ? (int)$port : 3306;
+    $backend->addServer(new HAProxyServer($name, $host, $portVal));
     $cfgObj->setBackend($backend);
     $cfgObj->save();
     restartHaproxy();
@@ -128,14 +131,14 @@ function deleteMysqlServer($name) {
     return true;
 }
 
-function updateMysqlServer($oldName, $newName, $newHost) {
+function updateMysqlServer($oldName, $newName, $newHost, ?int $newPort = null) {
     global $cfgObj, $backupDir;
     $backupFile = $cfgObj->backup($backupDir);
     if (!file_exists($backupFile)) 
         throw new Exception("Echec de la sauvegarde avant mise a jour de serveur");
 
     $backend = $cfgObj->getBackend('mysql_servers');
-    $backend->updateServer($oldName, $newName, $newHost);
+    $backend->updateServer($oldName, $newName, $newHost, $newPort);
     $cfgObj->setBackend($backend);
     $cfgObj->save();
     restartHaproxy();

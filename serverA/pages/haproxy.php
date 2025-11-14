@@ -73,14 +73,16 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
             <tr>
                 <th>Nom</th>
                 <th>Hôte</th>
+                <th>Port</th>
                 <th>Action</th>
             </tr>
             <?php foreach (getAllMysqlServers() as $srv): ?>
                 <tr>
                     <td><?= htmlspecialchars($srv['name']) ?></td>
                     <td><?= htmlspecialchars($srv['host']) ?></td>
+                    <td><?= htmlspecialchars($srv['port'] ?? 3306) ?></td>
                     <td>
-                        <button type="button" class="modify-btn" data-name="<?= htmlspecialchars($srv['name']) ?>" data-host="<?= htmlspecialchars($srv['host']) ?>">Modifier</button>
+                        <button type="button" class="modify-btn" data-name="<?= htmlspecialchars($srv['name']) ?>" data-host="<?= htmlspecialchars($srv['host']) ?>" data-port="<?= htmlspecialchars($srv['port'] ?? 3306) ?>">Modifier</button>
                         <button type="button" class="delete-btn" data-name="<?= htmlspecialchars($srv['name']) ?>">Supprimer</button>
                     </td>
                 </tr>
@@ -95,6 +97,7 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
         <form action="../backend/haproxy-ui/controller/CrudController.php?action=add" id="addMysqlServerForm" method="post">
             <label>Nom du serveur: <input name="serverName" value="mysql3" required></label><br>
             <label>Hôte du serveur: <input name="serverHost" value="mysql_db_3" required></label><br>
+            <label>Port: <input name="serverPort" type="number" value="3306"></label><br>
             <button type="submit">Ajouter</button>
         </form>
     </div>
@@ -107,6 +110,7 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
             <label>Ancien nom: <input id="oldName" name="oldName" readonly required></label><br>
             <label>Nouveau nom: <input id="newName" name="newName" required></label><br>
             <label>Nouvel hôte: <input id="newHost" name="newHost" required></label><br>
+            <label>Nouveau port: <input id="newPort" name="newPort" type="number" value=""></label><br>
             <button type="submit" id="updateBtn">Confirmer la modification</button>
         </form>
     </div>
@@ -143,7 +147,6 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
                 body: formData
             }));
             if (addResult && addResult.success) {
-                // reload to reflect new server
                 location.reload();
             }
         });
@@ -158,6 +161,7 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
         const oldNameInput = document.getElementById('oldName');
         const newNameInput = document.getElementById('newName');
         const newHostInput = document.getElementById('newHost');
+        const newPortInput = document.getElementById('newPort');
         const updateBtn = document.getElementById('updateBtn');
 
         document.querySelectorAll('.modify-btn').forEach(btn => {
@@ -168,6 +172,8 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
                 oldNameInput.value = name;
                 newNameInput.value = name;
                 newHostInput.value = host;
+                if (newPortInput) 
+                    newPortInput.value = btn.dataset.port || 3306;
 
                 // Highlight the selected row
                 document.querySelectorAll('#table tr').forEach(r => r.classList.remove('selected-row'));

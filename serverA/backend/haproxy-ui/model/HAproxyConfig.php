@@ -99,24 +99,30 @@ class HAProxyBackend {
         throw new Exception("Le serveur $name n'existe pas dans backend {$this->name}.");
     }
 
-    public function updateServer(string $oldName, string $newName, string $newHost): bool {
+
+    public function updateServer(string $oldName, string $newName, string $newHost, ?int $newPort = null): bool {
         if ($newName !== $oldName && $this->hasServer($newName)) {
-            throw new Exception("Le nom de serveur \"$newName\" existe deja dans backend {$this->name}");
+            throw new Exception("Le nom de serveur \"$newName\" existe déjà dans backend {$this->name}.");
         }
 
         foreach ($this->lines as $i => $line) {
-            if (preg_match('/^\s*server\s+' . preg_quote($oldName, '/') . '\s+\S+(?::\d+)?\s+check\b/i', $line)) {
-                $host = $newHost;
-                $port = 3306;
-                if (preg_match('/^(.+?):(\d+)$/', $newHost, $m)) {
-                    $host = $m[1];
-                    $port = (int)$m[2];
+            if (preg_match('/^\s*server\s+' . preg_quote($oldName, '/') . '\s+(\S+?)(?::(\d+))?\s+check\b/i', $line, $m)) {
+                $existingHost = $m[1];
+                $existingPort = isset($m[2]) && is_numeric($m[2]) ? (int)$m[2] : 3306;
+
+                $host = $newHost ?: $existingHost;
+                $port = $newPort ?? $existingPort;
+
+                if (preg_match('/^(.+?):(\d+)$/', $newHost, $mm)) {
+                    $host = $mm[1];
+                    $port = (int)$mm[2];
                 }
+
                 $this->lines[$i] = '    server ' . $newName . ' ' . $host . ':' . $port . ' check';
                 return true;
             }
         }
-        throw new Exception("Le serveur $oldName n'existe pas dans backend {$this->name}");
+        throw new Exception("Le serveur $oldName n'existe pas dans backend {$this->name}.");
     }
 
     public function renderLines(): array {
