@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
+require_once 'http://localhost:4321/controller/MainController.php';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -22,7 +22,7 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
         <h2>Configuration serveurs web</h2>
 
         <div>
-            <form action="../backend/haproxy-ui/controller/CrudController.php?action=balance" id="balanceForm">
+            <form action="http://localhost:4321/CrudController.php?action=balance" id="balanceForm">
                 <label for="balanceMode">Mode de balance</label>
                 <select id="balanceMode" name="balanceMode">
                     <option value="roundrobin">roundrobin</option>
@@ -46,7 +46,7 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
 
             (async function loadBalanceMode() {
                 try {
-                    const resp = await fetch('../backend/haproxy-ui/controller/CrudController.php?action=get-balance&backend=web_servers');
+                    const resp = await fetch('http://localhost:4321/CrudController.php?action=get-balance&backend=web_servers');
                     const data = await resp.json();
                     if (data && data.mode) {
                         const sel = document.getElementById('balanceMode');
@@ -95,7 +95,7 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
 
     <div>
         <h3>Ajouter un serveur</h3>
-        <form action="../backend/haproxy-ui/controller/CrudController.php?action=add" id="addServerForm" method="post">
+        <form action="http://localhost:4321/CrudController.php?action=add" id="addServerForm" method="post">
             <input type="hidden" name="backend" value="web_servers">
             <label>Nom du serveur: <input name="serverName" value="web3" required></label><br>
             <label>Hôte du serveur: <input name="serverHost" value="server_3" required></label><br>
@@ -108,7 +108,7 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
 
     <div>
         <h3>Modifier un serveur</h3>
-        <form id="modifyServerForm" action="../backend/haproxy-ui/controller/CrudController.php?action=update" method="post">
+        <form id="modifyServerForm" action="http://localhost:4321/CrudController.php?action=update" method="post">
             <input type="hidden" name="backend" value="web_servers">
             <label>Ancien nom: <input id="oldName" name="oldName" readonly required></label><br>
             <label>Nouveau nom: <input id="newName" name="newName" required></label><br>
@@ -178,7 +178,7 @@ require_once __DIR__ . '/../backend/haproxy-ui/controller/MainController.php';
                 formData.append('backend', 'web_servers');
 
                 try {
-                    const resp = await fetch('../backend/haproxy-ui/controller/CrudController.php?action=delete', {
+                    const resp = await fetch('http://localhost:4321/CrudController.php?action=delete', {
                         method: 'POST',
                         body: formData
                     });

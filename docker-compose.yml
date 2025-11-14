@@ -79,7 +79,9 @@ services:
       - DB_NAME=session_db
 
   haproxy:
-    image: haproxy:latest
+    build:
+      context: ./haproxy
+      dockerfile: Dockerfile
     container_name: haproxy
     ports:
       - "8080:8080"
@@ -90,8 +92,26 @@ services:
       - mysql_db_3
       - server_1
       - server_2
+      - haproxy_front
+      - haproxy_back
     volumes:
       - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+
+  haproxy_front:
+    build: ./haproxy/front
+    container_name: haproxy_front
+    ports:
+      - "1234:80"
+    volumes:
+      - ./haproxy/front:/var/www/html
+
+  haproxy_back:
+    build: ./haproxy/back
+    container_name: haproxy_back
+    ports:
+      - "4321:80"
+    volumes:
+      - ./haproxy/back:/var/www/html
 
 volumes:
   mysql_data_1:
